@@ -6,8 +6,7 @@
 **Repository:** https://github.com/Izumi6/Resume-Screening-System  
 **Live Application (Vercel):** https://resume-screening-system-ai.vercel.app  
 **Alternative Mirror:** https://resume-screening-engine.vercel.app  
-**Project Report (PDF):** [Resume Screening System Report](report/Resume_Screening_System_Report.pdf)  
-**Combined Projects Portfolio (PDF):** [Combined Two-Project Report](report/Combined_Projects_Report.pdf)  
+
 
 
 ---

@@ -26,3 +26,6 @@ Thumbs.db
 *.swo
 .vercel
 .env*
+
+# Reports & Portfolio Documents (Kept locally, excluded from GitHub)
+report/
