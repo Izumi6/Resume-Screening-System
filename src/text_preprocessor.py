@@ -150,6 +150,9 @@ class TextPreprocessor:
         cleaned_phones = []
         for p in phones:
             p = p.strip()
+            # ignore year ranges like "2019 - 2021" or "2013 - 2017"
+            if re.match(r'^(?:19|20)\d{2}\s*[-–—]\s*(?:19|20)\d{2}$', p):
+                continue
             # only keep if it looks like a real phone number (7+ digits)
             digit_count = sum(1 for c in p if c.isdigit())
             if digit_count >= 7:
