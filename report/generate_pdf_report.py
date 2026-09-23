@@ -3,191 +3,261 @@ generate_pdf_report.py
 ----------------------
 Compiles the professional two-page project report PDF matching the academic
 reference format for Suyash Vakhariya (AIML A6 AUG 11681).
+Features:
+- Page 1: Header, Centered Title, Introduction, Problem Statement, Results & Discussion.
+- Page 2: Actual photo of Analytics Dashboard (Figure 1), Confusion Matrix (Figure 2),
+          Python Model Training Snippet Box, Conclusion, and Academic References.
 """
 
 import os
 import fitz
+import PIL.Image
 
 def build_pdf_report(output_path="report/Resume_Screening_System_Report.pdf"):
     doc = fitz.open()
 
-    page_w, page_h = 595.28, 841.89  # A4 size in points
-    margin_x = 54
-    margin_top = 45
-    margin_bottom = 45
+    page_w, page_h = 595.28, 841.89  # Standard A4 size in points
+    margin_x = 48
+    margin_top = 34
+    margin_bottom = 34
     content_w = page_w - 2 * margin_x
 
-    def add_paragraph(page, text, y, fontname="helv", fontsize=9.5, extra_space=12):
-        rect = fitz.Rect(margin_x, y, margin_x + content_w, page_h - margin_bottom)
-        res = page.insert_textbox(rect, text, fontsize=fontsize, fontname=fontname)
-        used_h = rect.height - res
-        return y + used_h + extra_space
+    # Ensure clean analytics crop exists
+    analytics_clean = "report/figures/analytics_dashboard_clean.png"
+    analytics_src = "report/figures/analytics_dashboard.png"
+    if not os.path.exists(analytics_clean) and os.path.exists(analytics_src):
+        img = PIL.Image.open(analytics_src)
+        crop_clean = img.crop((780, 20, 2920, 1260))
+        crop_clean.save(analytics_clean)
+
+    def add_textbox(page, text, y, fontname="helv", fontsize=8.8, leading=1.30, max_h=None):
+        if max_h is None:
+            max_h = page_h - margin_bottom - y
+        rect = fitz.Rect(margin_x, y, margin_x + content_w, y + max_h)
+        remaining = page.insert_textbox(
+            rect, text, fontsize=fontsize, fontname=fontname, lineheight=leading
+        )
+        used_h = max_h - remaining
+        return y + used_h
 
     # ================= PAGE 1 =================
     p1 = doc.new_page(width=page_w, height=page_h)
     y = margin_top
 
-    # Header details
-    p1.insert_text((margin_x, y), "Name - Suyash Vakhariya", fontsize=11, fontname="hebo")
-    y += 16
-    p1.insert_text((margin_x, y), "Artificial Intelligence and Machine Learning", fontsize=11, fontname="hebo")
-    y += 16
-    p1.insert_text((margin_x, y), "Roll No - Suyash Vakhariya AIML A6 AUG 11681", fontsize=11, fontname="hebo")
-    y += 30
+    # Header Details
+    p1.insert_text((margin_x, y), "Name - Suyash Vakhariya", fontsize=10.5, fontname="hebo")
+    y += 15
+    p1.insert_text((margin_x, y), "Artificial Intelligence and Machine Learning", fontsize=10.5, fontname="hebo")
+    y += 15
+    p1.insert_text((margin_x, y), "Roll No - Suyash Vakhariya AIML A6 AUG 11681", fontsize=10.5, fontname="hebo")
+    y += 24
 
     # Title (Bold, Centered)
     title_text = "Automated Resume Screening and Skill Matching System"
     title_w = fitz.get_text_length(title_text, fontname="hebo", fontsize=13)
     p1.insert_text(((page_w - title_w) / 2, y), title_text, fontsize=13, fontname="hebo")
-    y += 26
+    y += 22
 
-    # Section: Introduction
-    p1.insert_text((margin_x, y), "Introduction", fontsize=12, fontname="hebo")
-    y += 16
+    # Section 1: Introduction
+    p1.insert_text((margin_x, y), "Introduction", fontsize=11, fontname="hebo")
+    y += 14
 
     intro_p1 = (
-        "In the present recruitment and talent acquisition workflows, evaluating candidate profiles is becoming "
-        "increasingly demanding due to the massive volume of applications submitted for every open vacancy. "
-        "Predicting candidate suitability in advance can help recruiters as well as hiring managers to keep "
-        "track of the applicant pool and make objective shortlisting decisions. Many enterprise organizations have "
-        "adopted automated screening systems today. Such systems are favorable to human resource departments in "
-        "improving their screening efficiency and consistency. The purpose of an automated screening pipeline is "
-        "to assist recruitment teams in identifying qualified applicants for technical roles. In an automated "
-        "evaluation system, multi-dimensional candidate parameters are analyzed systematically, including domain "
-        "skills, career tenure, and educational background. To achieve consistent screening performance, it is "
-        "essential to evaluate applicant qualifications objectively against standard job requirements."
+        "In modern talent acquisition workflows, corporate recruitment teams frequently receive hundreds to thousands "
+        "of curriculum vitae for every publicly advertised technical position. Manually reviewing and cross-referencing "
+        "each applicant's background against complex job criteria is labor-intensive, slow, and susceptible to evaluator "
+        "fatigue. Furthermore, resumes exhibit wide variability in document formatting, structural organization, and "
+        "vocabulary conventions, making standardized manual assessment difficult to maintain consistently. To address "
+        "these operational bottlenecks, automated resume screening systems leverage Natural Language Processing (NLP) "
+        "and supervised machine learning to extract candidate credentials and evaluate their suitability in an objective, "
+        "reproducible manner."
     )
-    y = add_paragraph(p1, intro_p1, y, fontsize=9.5)
+    y = add_textbox(p1, intro_p1, y, fontsize=8.8)
+    y += 6
 
     intro_p2 = (
-        "The core function of the Automated Resume Screening System is to help recruiters assess candidate "
-        "fit in advance using Natural Language Processing (NLP) and supervised classification models. Such "
-        "techniques enable talent acquisition teams to identify high-potential candidates based on predicted fit "
-        "categories and allow hiring managers to focus their attention on candidates who best satisfy the role requirements."
+        "The core function of the Automated Resume Screening System is to process candidate resumes submitted in Portable "
+        "Document Format (PDF), normalize unstructured text via lemmatization and stop-word filtering, extract candidate attributes "
+        "(contact details, domain competencies, academic degrees, and professional tenure), and quantify the degree of alignment "
+        "between the resume and a target job description. The system incorporates an extensive technical skill taxonomy covering "
+        "over 150 domain competencies across seven categories (Languages, Frameworks, Databases, Cloud/DevOps, Data Science, Tools, "
+        "and Soft Skills), accounting for aliases and abbreviations."
     )
-    y = add_paragraph(p1, intro_p2, y, fontsize=9.5)
+    y = add_textbox(p1, intro_p2, y, fontsize=8.8)
+    y += 6
 
     intro_p3 = (
-        "Supervised classification algorithms, such as Random Forest and Logistic Regression, are widely used for "
-        "predictive candidate-job matching. This is because models trained on structured numerical features derived "
-        "from text similarity and domain skill taxonomies offer high interpretability, reliable decision boundaries, "
-        "and well-defined feature importances that explain why a specific candidate is categorized into a given tier."
+        "Supervised classification algorithms, specifically Random Forest ensembles alongside regularized Logistic Regression "
+        "baselines, are employed to map extracted candidate features into discrete suitability tiers: Strong Match, Moderate Match, "
+        "and Weak Match. Models trained on structured numerical features derived from sublinear TF-IDF textual similarity and domain "
+        "skill coverage offer high interpretability, reliable decision boundaries, and transparent feature importances that explain "
+        "the quantitative factors driving each candidate's ranking."
     )
-    y = add_paragraph(p1, intro_p3, y, fontsize=9.5, extra_space=16)
+    y = add_textbox(p1, intro_p3, y, fontsize=8.8)
+    y += 13
 
-    # Section: Problem Statement
-    p1.insert_text((margin_x, y), "Problem Statement", fontsize=12, fontname="hebo")
-    y += 16
+    # Section 2: Problem Statement
+    p1.insert_text((margin_x, y), "Problem Statement", fontsize=11, fontname="hebo")
+    y += 14
 
     ps_p1 = (
-        "The Main Objective of \"Automated Resume Screening System\" is to implement an algorithmic model that "
-        "predicts the match category of an individual applicant against a target job description. The match category "
-        "(\"Strong Match\", \"Moderate Match\", or \"Weak Match\") is our label (output) and the extracted candidate "
-        "parameters will be our features (inputs)."
+        "The primary objective of the Automated Resume Screening System is to implement an end-to-end algorithmic pipeline that "
+        "predicts the match category of an individual applicant against a target job description. Given a raw resume document Dr "
+        "and a job description Djd, the pipeline parses and normalizes the underlying text and transforms the unstructured inputs "
+        "into a structured 5-dimensional feature representation: x = [x_tfidf, x_skill_pct, x_exp, x_edu, x_skills_total], where "
+        "x_tfidf denotes the sublinear TF-IDF cosine similarity between resume and job description, x_skill_pct is the percentage of "
+        "required role skills matched, x_exp denotes parsed professional experience years, x_edu denotes the highest academic qualification "
+        "level (scale 1 to 5), and x_skills_total is the total count of verified candidate skills."
     )
-    y = add_paragraph(p1, ps_p1, y, fontsize=9.5)
+    y = add_textbox(p1, ps_p1, y, fontsize=8.8)
+    y += 6
 
     ps_p2 = (
-        "The core function of Resume Screening is to estimate candidate-job alignment in advance by extracting "
-        "unstructured textual attributes and computing similarity metrics. Such techniques enable recruiters to "
-        "filter through applicant pools rapidly, flagging those profiles that satisfy mandatory prerequisites."
+        "The problem statement can be formalized as: \"Given a dataset containing candidate-job attribute vectors, define supervised "
+        "classification algorithms to identify whether an applicant qualifies as a Strong Match, Moderate Match, or Weak Match, and "
+        "evaluate model generalization through stratified cross-validation.\" The experimental dataset comprises 500 annotated candidate-job "
+        "pairs partitioned into 400 training instances (80%) and 100 testing instances (20%) via stratified sampling to maintain identical "
+        "class distributions. A critical evaluation constraint is ensuring that Weak Match applicants are never falsely classified as Strong Matches."
     )
-    y = add_paragraph(p1, ps_p2, y, fontsize=9.5)
+    y = add_textbox(p1, ps_p2, y, fontsize=8.8)
+    y += 13
 
-    ps_p3 = (
-        "The problem statement can be defined as follows: \"Given a dataset containing attributes of candidates "
-        "where using the features available from the dataset and define classification algorithms to identify whether "
-        "the candidate performs good in the job matching evaluation, also to evaluate different machine learning "
-        "models on the dataset.\" The data attributes include TF-IDF textual similarity, skill match percentage, "
-        "total skills count, years of professional experience, and highest education level. The data was collected "
-        "by parsing real-world curriculum vitae and job descriptions across technical domains."
-    )
-    y = add_paragraph(p1, ps_p3, y, fontsize=9.5, extra_space=16)
-
-    # Section: Results and Discussion
-    p1.insert_text((margin_x, y), "Results and Discussion", fontsize=12, fontname="hebo")
-    y += 16
+    # Section 3: Results and Discussion (Begins on Page 1)
+    p1.insert_text((margin_x, y), "Results and Discussion", fontsize=11, fontname="hebo")
+    y += 14
 
     rd_p1 = (
-        "Candidate qualification overlap is significantly associated with hiring classification outcomes. Most "
-        "candidates who had more than 70% skill match and high TF-IDF similarity achieved Strong Match grades "
-        "when compared to the other categories of candidate suitability."
+        "Candidate qualification overlap is significantly associated with hiring classification outcomes. Empirical evaluation was "
+        "conducted comparing an optimized Random Forest ensemble against an L2-regularized Logistic Regression baseline. On the held-out "
+        "test dataset (n = 100), the Random Forest model achieved 91.00% accuracy, 91.15% weighted precision, 91.00% weighted recall, and "
+        "90.98% weighted F1-score. Stratified 5-fold cross-validation demonstrated robust generalization with a mean F1-score of 92.74% "
+        "(+/- 2.68%). The Logistic Regression baseline achieved 95.00% accuracy and 94.95% weighted F1-score, confirming strong linear "
+        "separability along the composite scoring axes."
     )
-    y = add_paragraph(p1, rd_p1, y, fontsize=9.5)
+    y = add_textbox(p1, rd_p1, y, fontsize=8.8)
+    y += 6
+
+    rd_p2 = (
+        "Feature importance analysis computed via mean Gini impurity reduction revealed that TF-IDF cosine similarity (41.42%) and skill "
+        "match percentage (33.94%) account for over 75% of the model's discriminative power. Total skill volume contributed 14.98%, "
+        "experience years contributed 6.09%, and education tier level contributed 3.57%, confirming that lexical alignment and direct "
+        "skill coverage govern candidate qualification."
+    )
+    y = add_textbox(p1, rd_p2, y, fontsize=8.8)
 
     # ================= PAGE 2 =================
     p2 = doc.new_page(width=page_w, height=page_h)
     y = margin_top
 
-    # Embed Confusion Matrix Image
+    # 1. ACTUAL PHOTO OF ANALYTICS DASHBOARD (Centered with exact aspect ratio)
+    analytics_img = "report/figures/analytics_dashboard_clean.png"
+    if not os.path.exists(analytics_img):
+        analytics_img = "report/figures/analytics_dashboard.png"
+
+    if os.path.exists(analytics_img):
+        dash_w = 360
+        dash_h = 208
+        dash_x = margin_x + (content_w - dash_w) / 2
+        dash_rect = fitz.Rect(dash_x, y, dash_x + dash_w, y + dash_h)
+        p2.draw_rect(dash_rect, color=(0.78, 0.80, 0.85), width=0.8)
+        p2.insert_image(dash_rect, filename=analytics_img)
+        y += dash_h + 4
+
+        # Caption for Figure 1 using insert_textbox
+        cap1_text = (
+            "Figure 1: Real-time screening analytics dashboard displaying composite match gauge, Random Forest "
+            "classification probabilities, four-factor score breakdown bars, and extracted candidate credentials."
+        )
+        p2.insert_textbox(
+            fitz.Rect(margin_x, y, margin_x + content_w, y + 26),
+            cap1_text, fontsize=7.8, fontname="helv", lineheight=1.2
+        )
+        y += 26
+
+    # 2. MIDDLE ROW: Confusion Matrix (Left) + Code Snippet Box (Right)
+    row_y = y
+    cm_w = 155
+    cm_h = 110
+    cm_x = margin_x + 8
+
+    # Left: Confusion Matrix
     cm_img = "report/figures/confusion_matrix.png"
     if os.path.exists(cm_img):
-        img_rect = fitz.Rect(margin_x + 85, y, margin_x + content_w - 85, y + 215)
-        p2.insert_image(img_rect, filename=cm_img)
-        y += 222
+        cm_rect = fitz.Rect(cm_x, row_y, cm_x + cm_w, row_y + cm_h)
+        p2.draw_rect(cm_rect, color=(0.82, 0.84, 0.88), width=0.6)
+        p2.insert_image(cm_rect, filename=cm_img)
 
-    # Code snippet box matching reference format
-    code_box_h = 102
-    code_rect = fitz.Rect(margin_x, y, margin_x + content_w, y + code_box_h)
-    p2.draw_rect(code_rect, color=(0.85, 0.85, 0.85), fill=(0.97, 0.97, 0.97))
-    code_text = (
-        "[ ] model = RandomForestClassifier(n_estimators=50, max_depth=10, random_state=42)\n"
-        "    model.fit(X_train_scaled, y_train)\n"
-        "    pred = model.predict(X_test_scaled)\n"
-        "    print(f\"Accuracy: {accuracy_score(y_test, pred):.4f}\")\n"
-        "    print(f\"Weighted F1: {f1_score(y_test, pred, average='weighted'):.4f}\")\n\n"
-        "    Accuracy: 0.9100\n"
-        "    Weighted F1: 0.9098"
-    )
-    p2.insert_textbox(
-        fitz.Rect(margin_x + 10, y + 8, margin_x + content_w - 10, y + code_box_h),
-        code_text,
-        fontsize=8.5,
-        fontname="cour"
-    )
-    y += code_box_h + 16
+        # Caption for Figure 2 using direct insert_text
+        p2.insert_text(
+            (margin_x + 8, row_y + cm_h + 12),
+            "Figure 2: Confusion matrix (Accuracy: 91.00%).",
+            fontsize=7.4, fontname="helv"
+        )
 
-    # Section: Conclusion
-    p2.insert_text((margin_x, y), "Conclusion", fontsize=12, fontname="hebo")
-    y += 16
+    # Right: Python Code Snippet Box
+    code_x = margin_x + 185
+    code_w = content_w - 185
+    code_rect = fitz.Rect(code_x, row_y, code_x + code_w, row_y + cm_h)
+    p2.draw_rect(code_rect, color=(0.80, 0.82, 0.86), fill=(0.965, 0.97, 0.985), width=0.8)
+
+    code_lines = [
+        "# Model Training & Evaluation Snippet",
+        "model = RandomForestClassifier(",
+        "    n_estimators=50, max_depth=10,",
+        "    min_samples_split=5, min_samples_leaf=2,",
+        "    random_state=42",
+        ")",
+        "model.fit(X_train_scaled, y_train)",
+        "pred = model.predict(X_test_scaled)",
+        "",
+        "Accuracy: 0.9100  |  Weighted F1: 0.9098",
+        "5-Fold CV Mean F1: 0.9274 (+/- 0.0268)"
+    ]
+    curr_code_y = row_y + 13
+    for cl in code_lines:
+        p2.insert_text((code_x + 10, curr_code_y), cl, fontsize=7.2, fontname="cour")
+        curr_code_y += 9.5
+
+    # Give clear breathing room after the visuals row
+    y = row_y + cm_h + 34
+
+    # 3. Section: Conclusion
+    p2.insert_text((margin_x, y), "Conclusion", fontsize=11, fontname="hebo")
+    y += 14
 
     c_p1 = (
-        "In this project we did a deep analysis of what could be possible factors on whether a candidate is "
-        "likely to get a high match score or a low match score. The data contains rich information from resumes "
-        "and job descriptions, enabling us to predict a pretty precise Random Forest algorithm that predicts what "
-        "suitability tier a candidate will be placed in by analyzing the features. It is to my understanding that "
-        "the machine learning model is used to predict values with a given number of features thus providing us "
-        "with a good accuracy of 91% (and 95% with baseline Logistic Regression)."
+        "In this project, a comprehensive automated resume screening and candidate-job matching system was designed, "
+        "implemented, and empirically validated. By combining automated PDF document parsing, noise-reduction preprocessing, "
+        "and an extensive 150+ skills taxonomy with sublinear TF-IDF cosine similarity, the system transforms unstructured "
+        "resume records into a highly discriminative 5-dimensional feature representation. The trained Random Forest classifier "
+        "achieved 91.00% test accuracy and a 90.98% weighted F1-score, with 5-fold cross-validation confirming reliable stability "
+        "across evaluation folds (92.74%)."
     )
-    y = add_paragraph(p2, c_p1, y, fontsize=9.5)
+    y = add_textbox(p2, c_p1, y, fontsize=8.8)
+    y += 6
 
     c_p2 = (
-        "After evaluating all the algorithms on different parameters, we have managed to propose a model that can "
-        "predict the match category accurately using supervised learning algorithms. This model helps both the recruiter "
-        "and hiring organization to analyze candidate qualifications with the help of various graphs through which they "
-        "can easily decide about the candidate's suitability and suggest a better method for assessing technical fit. "
-        "In the future, an end-to-end website can be developed using which the end-user can come to check the "
-        "predictions more easily. We have proposed a model that can give consistent and accurate results to the "
-        "end-user, which satisfies their need by showing the correct output and helps to take better hiring decisions."
+        "After benchmarking models across multiple quantitative parameters, the system successfully categorizes applicants into "
+        "discrete suitability tiers while eliminating extreme misclassifications. The resulting machine learning pipeline has been "
+        "deployed through an interactive web analytics dashboard, enabling recruitment teams to visualize candidate match scores, "
+        "inspect skill gaps, and review candidate profiles in real time. Future extensions will incorporate transformer embeddings for "
+        "dense semantic matching and multi-lingual document parsing to further enhance enterprise recruitment workflows."
     )
-    y = add_paragraph(p2, c_p2, y, fontsize=9.5, extra_space=16)
+    y = add_textbox(p2, c_p2, y, fontsize=8.8)
+    y += 13
 
-    # Section: Reference
-    ref_title = "Reference: "
-    ref_w = fitz.get_text_length(ref_title, fontname="hebo", fontsize=8.5)
-    p2.insert_text((margin_x, y), ref_title, fontsize=8.5, fontname="hebo")
+    # 4. Section: References
+    p2.insert_text((margin_x, y), "References", fontsize=10, fontname="hebo")
+    y += 12
 
     ref_text = (
-        "G. Salton and C. Buckley. Term-weighting approaches in automatic text retrieval. Information "
-        "Processing & Management, 24(5):513-523, 1988.\n"
-        "F. Pedregosa et al. Scikit-learn: Machine Learning in Python. Journal of Machine Learning Research, "
-        "12:2825-2830, 2011.\n"
-        "M. Honnibal and I. Montani. spaCy 2: Natural language understanding with Bloom embeddings, convolutional "
-        "neural networks and incremental parsing, 2017.\n"
-        "L. Breiman. Random Forests. Machine Learning, 45(1):5-32, 2001."
+        "1. G. Salton and C. Buckley. Term-weighting approaches in automatic text retrieval. Information Processing & Management, 24(5):513-523, 1988.\n"
+        "2. F. Pedregosa et al. Scikit-learn: Machine Learning in Python. Journal of Machine Learning Research, 12:2825-2830, 2011.\n"
+        "3. L. Breiman. Random Forests. Machine Learning, 45(1):5-32, 2001.\n"
+        "4. S. Bird, E. Klein, and E. Loper. Natural Language Processing with Python. O'Reilly Media, 2009."
     )
-    rect = fitz.Rect(margin_x + ref_w, y - 8, margin_x + content_w, page_h - margin_bottom)
-    p2.insert_textbox(rect, ref_text, fontsize=8, fontname="helv")
+    rect = fitz.Rect(margin_x, y, margin_x + content_w, page_h - margin_bottom)
+    p2.insert_textbox(rect, ref_text, fontsize=7.6, fontname="helv", lineheight=1.28)
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     doc.save(output_path)

@@ -1,121 +1,81 @@
 # Automated Resume Screening and Candidate-Job Matching System
 
 **Name:** Suyash Vakhariya  
+**Discipline:** Artificial Intelligence and Machine Learning  
 **Roll No:** Suyash Vakhariya AIML A6 AUG 11681  
-**Discipline:** Artificial Intelligence & Machine Learning  
 
 ---
 
 ## Introduction
 
-In modern talent acquisition workflows, corporate recruitment teams frequently receive hundreds to thousands of resumes for every publicly advertised position. Manually reviewing and cross-referencing each applicant's qualifications against job criteria is labor-intensive, slow, and susceptible to unconscious evaluator bias. Furthermore, curriculum vitae (CVs) exhibit wide variability in document formatting, structural organization, and vocabulary conventions, making standardized manual assessment challenging. To address these operational bottlenecks, automated resume screening systems leverage Natural Language Processing (NLP) and supervised machine learning to extract relevant candidate credentials and evaluate their suitability in an objective, reproducible manner.
+In modern talent acquisition workflows, corporate recruitment teams frequently receive hundreds to thousands of curriculum vitae for every publicly advertised technical position. Manually reviewing and cross-referencing each applicant's background against complex job criteria is labor-intensive, slow, and susceptible to evaluator fatigue. Furthermore, resumes exhibit wide variability in document formatting, structural organization, and vocabulary conventions, making standardized manual assessment difficult to maintain consistently. To address these operational bottlenecks, automated resume screening systems leverage Natural Language Processing (NLP) and supervised machine learning to extract candidate credentials and evaluate their suitability in an objective, reproducible manner.
 
-The core function of this screening system is to process candidate resumes submitted in Portable Document Format (PDF), normalize unstructured text via lemmatization and stop-word filtering, extract candidate attributes (contact details, technical skills, academic qualifications, and professional tenure), and quantify the degree of alignment between the resume and a target job description. The system utilizes an extensive domain skill taxonomy covering over 150 competencies across seven technical disciplines (Data Science, Cloud/DevOps, Software Engineering, Database Systems, Web Development, Mobile Development, and Soft Skills).
+The core function of the Automated Resume Screening System is to process candidate resumes submitted in Portable Document Format (PDF), normalize unstructured text via lemmatization and stop-word filtering, extract candidate attributes (contact details, domain competencies, academic degrees, and professional tenure), and quantify the degree of alignment between the resume and a target job description. The system incorporates an extensive technical skill taxonomy covering over 150 domain competencies across seven categories (Languages, Frameworks, Databases, Cloud/DevOps, Data Science, Tools, and Soft Skills), accounting for aliases and abbreviations.
 
-By combining Term Frequency-Inverse Document Frequency (TF-IDF) cosine similarity with discrete attribute extraction, the pipeline constructs a structured feature representation for each candidate-job pair. Supervised classifiers—specifically Random Forest and Logistic Regression—are then trained to categorize applicants into discrete match tiers: **Strong Match**, **Moderate Match**, and **Weak Match**. This hybrid methodology ensures that recruiters benefit from both high-level statistical predictions and granular, explainable skill-gap breakdowns.
+Supervised classification algorithms, specifically Random Forest ensembles alongside regularized Logistic Regression baselines, are employed to map extracted candidate features into discrete suitability tiers: Strong Match, Moderate Match, and Weak Match. Models trained on structured numerical features derived from sublinear TF-IDF textual similarity and domain skill coverage offer high interpretability, reliable decision boundaries, and transparent feature importances that explain the quantitative factors driving each candidate's ranking.
 
 ---
 
 ## Problem Statement
 
-The primary objective of the **Automated Resume Screening System** is to design and implement an end-to-end algorithmic pipeline that accepts unstructured candidate resumes and target job descriptions, parses and normalizes the underlying text, extracts salient qualification parameters, and accurately classifies applicant suitability into discrete match categories.
-
-Formally, given a raw resume document $D_r$ and a job description $D_{jd}$, the pipeline transforms the unstructured inputs into a 5-dimensional feature vector:
+The primary objective of the Automated Resume Screening System is to implement an end-to-end algorithmic pipeline that predicts the match category of an individual applicant against a target job description. Given a raw resume document $D_r$ and a job description $D_{jd}$, the pipeline parses and normalizes the underlying text and transforms the unstructured inputs into a structured 5-dimensional feature representation:
 
 $$\mathbf{x} = \big[\, x_{\text{tfidf}},\, x_{\text{skill\_pct}},\, x_{\text{exp}},\, x_{\text{edu}},\, x_{\text{skills\_total}} \,\big]$$
 
 where:
-- $x_{\text{tfidf}} \in [0, 1]$ represents the cosine similarity computed between unigram/bigram TF-IDF vectors of the preprocessed resume and job description.
-- $x_{\text{skill\_pct}} \in [0, 100]$ represents the percentage of required job skills matched within the candidate's resume.
-- $x_{\text{exp}} \ge 0$ denotes the estimated years of professional experience parsed from work history chronological patterns.
-- $x_{\text{edu}} \in \{1, 2, 3, 4, 5\}$ denotes the highest academic qualification level detected (1: High School, 2: Diploma, 3: Undergraduate, 4: Postgraduate, 5: Doctorate).
-- $x_{\text{skills\_total}} \in \mathbb{N}$ denotes the total number of recognized domain skills found in the applicant's profile.
+- $x_{\text{tfidf}} \in [0, 1]$ denotes the sublinear TF-IDF cosine similarity between resume and job description.
+- $x_{\text{skill\_pct}} \in [0, 100]$ is the percentage of required role skills matched.
+- $x_{\text{exp}} \ge 0$ denotes parsed professional experience years.
+- $x_{\text{edu}} \in \{1, 2, 3, 4, 5\}$ denotes the highest academic qualification level.
+- $x_{\text{skills\_total}} \in \mathbb{N}$ is the total count of verified candidate skills.
 
-The target variable is defined as:
-
-$$y \in \{\text{"Strong Match"},\, \text{"Moderate Match"},\, \text{"Weak Match"}\}$$
-
-The experimental dataset consists of 500 annotated candidate-job pairs. The data was split into 400 training instances (80%) and 100 test instances (20%) using stratified sampling to preserve identical class distributions across splits. The objective is to achieve high precision and recall across all three classes while preventing critical misclassifications (specifically ensuring that Weak Match applicants are never misclassified as Strong Matches).
+The problem statement can be formalized as: "Given a dataset containing candidate-job attribute vectors, define supervised classification algorithms to identify whether an applicant qualifies as a Strong Match, Moderate Match, or Weak Match, and evaluate model generalization through stratified cross-validation." The experimental dataset comprises 500 annotated candidate-job pairs partitioned into 400 training instances (80%) and 100 testing instances (20%) via stratified sampling to maintain identical class distributions. A critical evaluation constraint is ensuring that Weak Match applicants are never falsely classified as Strong Matches.
 
 ---
 
 ## Results and Discussion
 
-Model evaluation was conducted comparing a Random Forest ensemble (optimized via 5-fold cross-validation grid search over tree count, maximum depth, and split criteria) against an L2-regularized Logistic Regression baseline. All feature dimensions were standardized using z-score normalization ($z = \frac{x - \mu}{\sigma}$) fitted on the training split.
+Candidate qualification overlap is significantly associated with hiring classification outcomes. Empirical evaluation was conducted comparing an optimized Random Forest ensemble against an L2-regularized Logistic Regression baseline. On the held-out test dataset ($n = 100$), the Random Forest model achieved 91.00% accuracy, 91.15% weighted precision, 91.00% weighted recall, and 90.98% weighted F1-score. Stratified 5-fold cross-validation demonstrated robust generalization with a mean F1-score of 92.74% (± 2.68%). The Logistic Regression baseline achieved 95.00% accuracy and 94.95% weighted F1-score, confirming strong linear separability along the composite scoring axes.
 
-### Quantitative Performance Comparison
+Feature importance analysis computed via mean Gini impurity reduction revealed that TF-IDF cosine similarity (41.42%) and skill match percentage (33.94%) account for over 75% of the model's discriminative power. Total skill volume contributed 14.98%, experience years contributed 6.09%, and education tier level contributed 3.57%, confirming that lexical alignment and direct skill coverage govern candidate qualification.
 
-| Evaluation Metric | Random Forest Classifier | Logistic Regression Baseline |
-|:---|:---:|:---:|
-| **Test Accuracy** | **91.00%** (0.9100) | **95.00%** (0.9500) |
-| **Weighted Precision** | **91.15%** (0.9115) | **95.15%** (0.9515) |
-| **Weighted Recall** | **91.00%** (0.9100) | **95.00%** (0.9500) |
-| **Weighted F1-Score** | **90.98%** (0.9098) | **94.95%** (0.9495) |
-| **5-Fold CV F1 (Mean)** | **92.74%** (0.9274) | **92.74%** (0.9274) |
-| **5-Fold CV Std Dev** | **± 2.68%** (0.0268) | **± 2.68%** (0.0268) |
+### Real-Time Screening Analytics Dashboard
 
-Both models demonstrated high classification efficacy. The Random Forest classifier demonstrated robust generalization with balanced class-wise F1-scores: 0.87 for Moderate Match ($n=34$), 0.94 for Strong Match ($n=33$), and 0.93 for Weak Match ($n=33$).
+![Analytics Dashboard](figures/analytics_dashboard_clean.png)
+*Figure 1: Real-time screening analytics dashboard displaying composite match gauge, Random Forest classification probabilities, four-factor score breakdown bars, and extracted candidate credentials.*
 
-### Confusion Matrix Analysis
-
-The confusion matrix for the Random Forest model on the 100 held-out test samples demonstrates sharp diagonal concentration:
+### Multi-Class Confusion Matrix & Implementation
 
 ![Confusion Matrix](figures/confusion_matrix.png)
-
-Out of 34 actual Moderate Match candidates, 29 were correctly classified, 1 was classified as Strong Match, and 4 were categorized as Weak Match. For the 33 actual Strong Match candidates, 30 were correctly classified, 3 were categorized as Moderate Match, and 0 were categorized as Weak Match. For the 33 actual Weak Match candidates, 32 were correctly classified, 1 was categorized as Moderate Match, and 0 were categorized as Strong Match. Crucially, the off-diagonal cells between Strong and Weak classes are zero or near-zero, proving that the model maintains clean separation between high-fit and low-fit applicants.
-
-### Feature Importance
-
-Feature importance was computed using Gini impurity reduction across all 50 estimators in the trained Random Forest model:
-
-![Feature Importance](figures/feature_importance.png)
-
-The relative importance breakdown is as follows:
-1. **TF-IDF Textual Similarity (41.42%):** The single largest contributor to classification, indicating that holistic vocabulary and contextual relevance between resume and JD strongly inform candidate suitability.
-2. **Skill Match Percentage (33.94%):** Direct overlap of required technical skills provides the second-strongest discriminative signal.
-3. **Total Skills Count (14.98%):** Reflects candidate breadth and technical versatility.
-4. **Experience Years (6.09%):** Acts as a secondary discriminator for senior versus junior roles.
-5. **Education Level (3.57%):** Serves as an eligibility check for specialized roles requiring advanced degrees.
-
-Together, TF-IDF similarity and skill match percentage account for over 75% of the model's predictive capability, confirming that combining broad vocabulary overlap with targeted entity extraction yields the most reliable screening outcomes.
-
-### Model Implementation Snippet
+*Figure 2: Confusion matrix for Random Forest model (Accuracy: 91.00%, held-out test split n = 100).*
 
 ```python
-# Model training and evaluation
+# Model Training & Evaluation Snippet
 model = RandomForestClassifier(
-    n_estimators=50,
-    max_depth=10,
-    min_samples_split=5,
-    min_samples_leaf=2,
+    n_estimators=50, max_depth=10,
+    min_samples_split=5, min_samples_leaf=2,
     random_state=42
 )
 model.fit(X_train_scaled, y_train)
-y_pred = model.predict(X_test_scaled)
+pred = model.predict(X_test_scaled)
 
-print(f"Accuracy: {accuracy_score(y_test, y_pred):.4f}")
-print(f"Weighted F1: {f1_score(y_test, y_pred, average='weighted'):.4f}")
-# Output:
-# Accuracy: 0.9100
-# Weighted F1: 0.9098
+Accuracy: 0.9100  |  Weighted F1: 0.9098
+5-Fold CV Mean F1: 0.9274 (+/- 0.0268)
 ```
 
 ---
 
 ## Conclusion
 
-In this project, an end-to-end automated resume screening and candidate-job matching system was developed and evaluated. By integrating text preprocessing, custom skill taxonomy extraction, and TF-IDF vectorization with supervised machine learning algorithms, the system reliably classifies candidate-job alignment with high precision and recall.
+In this project, a comprehensive automated resume screening and candidate-job matching system was designed, implemented, and empirically validated. By combining automated PDF document parsing, noise-reduction preprocessing, and an extensive 150+ skills taxonomy with sublinear TF-IDF cosine similarity, the system transforms unstructured resume records into a highly discriminative 5-dimensional feature representation. The trained Random Forest classifier achieved 91.00% test accuracy and a 90.98% weighted F1-score, with 5-fold cross-validation confirming reliable stability across evaluation folds (92.74%).
 
-Empirical evaluation established that both Random Forest (91.0% test accuracy, 90.98% F1-score) and Logistic Regression (95.0% test accuracy, 94.95% F1-score) effectively differentiate applicant suitability, with 5-fold cross-validation confirming a 92.74% mean F1 score across folds. Feature importance analysis validated that combining semantic vocabulary similarity (41.42%) with structured skill-matching percentages (33.94%) provides recruiters with both automated classification and explainable diagnostic feedback.
-
-In addition to the classification engine, an interactive web dashboard was deployed using Streamlit to provide recruiters with real-time match gauges, skill gap analyses, and candidate profile summaries. Future extensions will incorporate transformer-based contextual embeddings (such as Sentence-BERT) to better detect semantic synonyms in non-standard job titles, implement OCR support for image-based resumes, and provide automated candidate feedback regarding missing prerequisites.
+After benchmarking models across multiple quantitative parameters, the system successfully categorizes applicants into discrete suitability tiers while eliminating extreme misclassifications. The resulting machine learning pipeline has been deployed through an interactive web analytics dashboard, enabling recruitment teams to visualize candidate match scores, inspect skill gaps, and review candidate profiles in real time. Future extensions will incorporate transformer embeddings for dense semantic matching and multi-lingual document parsing to further enhance enterprise recruitment workflows.
 
 ---
 
 ## References
 
-1. Salton, G., & Buckley, C. (1988). Term-weighting approaches in automatic text retrieval. *Information Processing & Management*, 24(5), 513–523.
-2. Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., & Duchesnay, E. (2011). Scikit-learn: Machine Learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830.
-3. Honnibal, M., & Montani, I. (2017). spaCy 2: Natural language understanding with Bloom embeddings, convolutional neural networks and incremental parsing.
-4. Breiman, L. (2001). Random Forests. *Machine Learning*, 45(1), 5–32.
-5. Bird, S., Klein, E., & Loper, E. (2009). *Natural Language Processing with Python: Analyzing Text with the Natural Language Toolkit*. O'Reilly Media.
+1. G. Salton and C. Buckley. Term-weighting approaches in automatic text retrieval. *Information Processing & Management*, 24(5):513–523, 1988.
+2. F. Pedregosa et al. Scikit-learn: Machine Learning in Python. *Journal of Machine Learning Research*, 12:2825–2830, 2011.
+3. L. Breiman. Random Forests. *Machine Learning*, 45(1):5–32, 2001.
+4. S. Bird, E. Klein, and E. Loper. *Natural Language Processing with Python*. O'Reilly Media, 2009.
