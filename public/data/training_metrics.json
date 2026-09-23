@@ -1,0 +1,83 @@
+{
+  "random_forest": {
+    "model_name": "Random Forest",
+    "accuracy": 0.91,
+    "precision_weighted": 0.9115,
+    "recall_weighted": 0.91,
+    "f1_weighted": 0.9098,
+    "classification_report": "                precision    recall  f1-score   support\n\nModerate Match       0.88      0.85      0.87        34\n  Strong Match       0.97      0.91      0.94        33\n    Weak Match       0.89      0.97      0.93        33\n\n      accuracy                           0.91       100\n     macro avg       0.91      0.91      0.91       100\n  weighted avg       0.91      0.91      0.91       100\n",
+    "confusion_matrix": [
+      [
+        29,
+        1,
+        4
+      ],
+      [
+        3,
+        30,
+        0
+      ],
+      [
+        1,
+        0,
+        32
+      ]
+    ],
+    "labels": [
+      "Moderate Match",
+      "Strong Match",
+      "Weak Match"
+    ]
+  },
+  "logistic_regression": {
+    "model_name": "Logistic Regression",
+    "accuracy": 0.95,
+    "precision_weighted": 0.9515,
+    "recall_weighted": 0.95,
+    "f1_weighted": 0.9495,
+    "classification_report": "                precision    recall  f1-score   support\n\nModerate Match       0.97      0.88      0.92        34\n  Strong Match       0.97      0.97      0.97        33\n    Weak Match       0.92      1.00      0.96        33\n\n      accuracy                           0.95       100\n     macro avg       0.95      0.95      0.95       100\n  weighted avg       0.95      0.95      0.95       100\n",
+    "confusion_matrix": [
+      [
+        30,
+        1,
+        3
+      ],
+      [
+        1,
+        32,
+        0
+      ],
+      [
+        0,
+        0,
+        33
+      ]
+    ],
+    "labels": [
+      "Moderate Match",
+      "Strong Match",
+      "Weak Match"
+    ]
+  },
+  "best_rf_params": {
+    "max_depth": 10,
+    "min_samples_leaf": 2,
+    "min_samples_split": 5,
+    "n_estimators": 50
+  },
+  "cv_best_score": 0.9274,
+  "dataset_size": 500,
+  "train_size": 400,
+  "test_size": 100,
+  "cv_scores": {
+    "mean": 0.9274,
+    "std": 0.0268,
+    "all_folds": [
+      0.9495,
+      0.9624,
+      0.9127,
+      0.9255,
+      0.8868
+    ]
+  }
+}

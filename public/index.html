@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Screening System | AI Candidate Matching Engine</title>
+  <meta name="description" content="AI-powered resume screening and candidate matching system using NLP, TF-IDF cosine similarity, skills taxonomy extraction, and Random Forest classification.">
+  <link rel="stylesheet" href="style.css">
+  <!-- PDF.js for client-side PDF parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+  <!-- Loading Animation Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingStatus">Analyzing Resume...</div>
+    <div class="loading-sub" id="loadingStep">Extracting text and skill entities</div>
+  </div>
+
+  <div class="app-container">
+    <!-- Sidebar Control Panel -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon">R</div>
+        <div class="brand-text">
+          <h1>ResumeAI</h1>
+          <p>Smart Screening Engine</p>
+        </div>
+      </div>
+
+      <!-- Resume Upload Control -->
+      <div class="control-group">
+        <div class="group-label">
+          <span>1. Upload Resume</span>
+          <div class="sub-actions">
+            <button class="sub-btn" id="loadSampleResumeBtn" title="Load sample Data Scientist resume">Sample PDF</button>
+          </div>
+        </div>
+
+        <div class="upload-zone" id="uploadDropZone">
+          <input type="file" id="resumeFileInput" accept=".pdf,.txt,.md" style="display: none;">
+          <div class="upload-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="12" y2="12"></line>
+              <line x1="15" y1="15" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <div class="upload-prompt" id="uploadPromptText">Click or Drag PDF Resume</div>
+          <div class="upload-hint">Supports PDF, TXT (Max 10MB)</div>
+        </div>
+
+        <div id="uploadedFileBadge" class="file-info" style="display: none;">
+          <span class="file-name" id="uploadedFileName">resume.pdf</span>
+          <button id="clearFileBtn" style="background:none;border:none;color:#ef4444;cursor:pointer;font-weight:700;">✕</button>
+        </div>
+
+        <!-- Sample Resume Selector Dropdown -->
+        <div style="margin-top: 10px;">
+          <select id="sampleResumeSelect" class="select-input" style="font-size: 11.5px; padding: 7px 10px;">
+            <option value="">-- Or Load Preloaded Candidate --</option>
+            <option value="alex">Alex Chen (Senior Data Scientist - 5 yrs exp)</option>
+            <option value="priya">Priya Sharma (ML & NLP Engineer - 3 yrs exp)</option>
+            <option value="david">David Miller (Junior Frontend Dev - 1 yr exp)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Job Description Control -->
+      <div class="control-group">
+        <div class="group-label">
+          <span>2. Job Description</span>
+          <div class="sub-actions">
+            <button class="sub-btn" id="loadSampleJdBtn">Sample JD</button>
+          </div>
+        </div>
+
+        <select id="jdPresetSelect" class="select-input" style="margin-bottom: 8px; font-size: 12px;">
+          <option value="ds">Preset: Senior Data Scientist</option>
+          <option value="mle">Preset: Machine Learning Engineer</option>
+          <option value="fsd">Preset: Full Stack Developer</option>
+          <option value="custom">Preset: Custom / Paste Below</option>
+        </select>
+
+        <textarea id="jdTextArea" class="text-area" placeholder="Paste target job requirements and qualifications here..."></textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <button id="analyzeBtn" class="btn-primary" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        <span>Analyze Resume</span>
+      </button>
+
+      <button id="resetBtn" class="sub-btn" style="margin-top: 10px; width: 100%; padding: 8px; text-align: center; display: none;">
+        Reset & Analyze Another
+      </button>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div>Author: <strong>Suyash Vakhariya</strong></div>
+        <div>Roll No: <strong>AIML A6 AUG 11681</strong></div>
+        <div style="margin-top: 4px; color: var(--accent-indigo);">Machine Learning & NLP Screening</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- 1. Hero Landing View (shown before analysis) -->
+      <div id="heroView" class="hero-view">
+        <div class="hero-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span>AI-POWERED RESUME ANALYSIS</span>
+        </div>
+
+        <h1 class="hero-title">Resume Screening System</h1>
+        <p class="hero-desc">
+          Upload a candidate resume and provide a target job description to compute instant matching diagnostics, 
+          uncover skill gaps, and classify alignment using Natural Language Processing and supervised Machine Learning.
+        </p>
+
+        <!-- 3-Step Process Cards -->
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num step-num-1">1</div>
+            <div class="step-title">Upload Resume</div>
+            <div class="step-desc">Drop a PDF resume or select a candidate profile to extract structured credentials automatically.</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num step-num-2">2</div>
+            <div class="step-title">Set Target Role</div>
+            <div class="step-desc">Pick from industry-standard job descriptions or paste custom requirements and qualifications.</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num step-num-3">3</div>
+            <div class="step-title">Instant Evaluation</div>
+            <div class="step-desc">Receive explainable composite match scores, missing skill alerts, and ML model predictions.</div>
+          </div>
+        </div>
+
+        <!-- Key Feature Pills -->
+        <div class="features-list">
+          <span class="feature-tag"><span class="feature-tag-dot"></span>Sublinear TF-IDF Similarity</span>
+          <span class="feature-tag"><span class="feature-tag-dot"></span>150+ Skills Taxonomy</span>
+          <span class="feature-tag"><span class="feature-tag-dot"></span>Skill Gap Diagnostics</span>
+          <span class="feature-tag"><span class="feature-tag-dot"></span>Random Forest Classifier</span>
+          <span class="feature-tag"><span class="feature-tag-dot"></span>Degree Level Quantification</span>
+          <span class="feature-tag"><span class="feature-tag-dot"></span>Experience Tenure Parser</span>
+        </div>
+
+        <!-- Platform Benchmark Stats -->
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-number">150+</div>
+            <div class="stat-desc">Skills Monitored</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">7</div>
+            <div class="stat-desc">Domain Categories</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">91.0%</div>
+            <div class="stat-desc">Random Forest Acc</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">92.7%</div>
+            <div class="stat-desc">5-Fold CV F1-Score</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Results Dashboard View (shown after analysis) -->
+      <div id="resultsView" class="results-view">
+        <!-- Results Header Banner -->
+        <div class="results-header-bar">
+          <div class="results-title-group">
+            <h2 id="candidateHeaderName">Analysis Results — Candidate</h2>
+            <p id="analysisMetaSubtitle">Evaluated across 5 quantitative dimensions</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div id="recommendationBadge" class="recommendation-badge badge-strong">
+              Strong Match
+            </div>
+            <button id="exportReportBtn" class="sub-btn" style="padding: 8px 14px; font-size: 12px; background: rgba(255,255,255,0.06);">
+              Export Report
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs-container">
+          <button class="tab-btn active" data-tab="tabDashboard">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Dashboard</span>
+          </button>
+          <button class="tab-btn" data-tab="tabSkills">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span>Skills Analysis</span>
+          </button>
+          <button class="tab-btn" data-tab="tabResume">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Resume Profile</span>
+          </button>
+          <button class="tab-btn" data-tab="tabModel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 20V10"></path>
+              <path d="M12 20V4"></path>
+              <path d="M6 20v-6"></path>
+            </svg>
+            <span>Model Insights</span>
+          </button>
+        </div>
+
+        <!-- Tab 1: Dashboard Overview -->
+        <div id="tabDashboard" class="tab-pane active">
+          <!-- Top Row: Gauge & Classification -->
+          <div class="grid-2">
+            <!-- Gauge Card -->
+            <div class="card">
+              <div class="card-title">Overall Candidate Match Score</div>
+              <div class="gauge-wrapper">
+                <svg class="gauge-svg" viewBox="0 0 200 120">
+                  <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100"></path>
+                  <path id="gaugePath" class="gauge-progress" d="M 20 100 A 80 80 0 0 1 180 100"
+                        stroke="url(#gaugeGradient)" stroke-dasharray="251.2" stroke-dashoffset="60"></path>
+                  <defs>
+                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#ef4444" />
+                      <stop offset="50%" stop-color="#f59e0b" />
+                      <stop offset="100%" stop-color="#10b981" />
+                    </linearGradient>
+                  </defs>
+                  <text id="gaugeScoreText" x="100" y="85" class="gauge-value-text">88.5%</text>
+                  <text id="gaugeSubText" x="100" y="108" class="gauge-label-text">Composite Match</text>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Model Classification Card -->
+            <div class="card">
+              <div class="card-title">Supervised Classifier Prediction</div>
+              <div style="text-align: center; padding: 10px 0 16px 0;">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.8px;">
+                  Model Architecture
+                </div>
+                <div style="font-size: 17px; font-weight: 800; color: var(--accent-purple); margin: 4px 0 14px 0;">
+                  Random Forest Ensemble
+                </div>
+
+                <!-- Probability Bars -->
+                <div style="text-align: left; margin-top: 10px;">
+                  <div style="margin-bottom: 10px;">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;">
+                      <span style="color:#34d399;">Strong Match</span>
+                      <span id="probStrongVal">86.0%</span>
+                    </div>
+                    <div class="bar-track"><div id="probStrongBar" class="bar-fill" style="width: 86%; background: #10b981;"></div></div>
+                  </div>
+
+                  <div style="margin-bottom: 10px;">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;">
+                      <span style="color:#fbbf24;">Moderate Match</span>
+                      <span id="probModerateVal">12.0%</span>
+                    </div>
+                    <div class="bar-track"><div id="probModerateBar" class="bar-fill" style="width: 12%; background: #f59e0b;"></div></div>
+                  </div>
+
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;">
+                      <span style="color:#f87171;">Weak Match</span>
+                      <span id="probWeakVal">2.0%</span>
+                    </div>
+                    <div class="bar-track"><div id="probWeakBar" class="bar-fill" style="width: 2%; background: #ef4444;"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Middle Row: 4 Metric Cards -->
+          <div class="grid-4">
+            <div class="metric-box">
+              <div class="metric-label">TF-IDF Similarity (35%)</div>
+              <div id="metricTfidfVal" class="metric-value">84.2%</div>
+              <div class="bar-track"><div id="barTfidf" class="bar-fill" style="width: 84%; background: var(--accent-indigo);"></div></div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-label">Skill Coverage (35%)</div>
+              <div id="metricSkillVal" class="metric-value">91.7%</div>
+              <div class="bar-track"><div id="barSkill" class="bar-fill" style="width: 92%; background: #10b981;"></div></div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-label">Experience Index (15%)</div>
+              <div id="metricExpVal" class="metric-value">100.0%</div>
+              <div class="bar-track"><div id="barExp" class="bar-fill" style="width: 100%; background: var(--accent-cyan);"></div></div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-label">Education Level (15%)</div>
+              <div id="metricEduVal" class="metric-value">100.0%</div>
+              <div class="bar-track"><div id="barEdu" class="bar-fill" style="width: 100%; background: var(--accent-purple);"></div></div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Candidate Quick Summary Cards -->
+          <div class="grid-4">
+            <div class="metric-box">
+              <div class="metric-label">Skills Found</div>
+              <div id="summaryTotalSkills" class="metric-value">18</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Extracted via taxonomy</div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-label">Skills Matched</div>
+              <div id="summarySkillsMatchedRatio" class="metric-value">11 / 12</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Coverage of JD requirements</div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-label">Experience Detected</div>
+              <div id="summaryExpYears" class="metric-value">5 yrs</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Professional tenure parsed</div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-label">Highest Degree</div>
+              <div id="summaryHighestDegree" class="metric-value">Masters</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Qualification tier 4/5</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Skills Analysis -->
+        <div id="tabSkills" class="tab-pane">
+          <!-- Skill Match Hero Rate -->
+          <div class="skill-hero">
+            <div class="metric-label">Role Skill Match Rate</div>
+            <div id="skillsHeroPercentage" class="skill-hero-num">91.7%</div>
+            <div id="skillsHeroSubtext" class="skill-hero-sub">11 of 12 required skills detected in resume</div>
+          </div>
+
+          <!-- Matched vs Missing Skills Badges -->
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title" style="color: #34d399;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Matched Skills</span>
+                <span id="matchedCountBadge" style="margin-left: auto; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(16,185,129,0.15); color: #34d399;">0</span>
+              </div>
+              <div id="matchedSkillsList" class="badge-container"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title" style="color: #f87171;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span>Missing Skill Gaps</span>
+                <span id="missingCountBadge" style="margin-left: auto; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(239,68,68,0.15); color: #f87171;">0</span>
+              </div>
+              <div id="missingSkillsList" class="badge-container"></div>
+            </div>
+          </div>
+
+          <!-- Additional Candidate Skills -->
+          <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title" style="color: var(--accent-purple);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
+              <span>Additional Candidate Skills (Beyond Job Description)</span>
+              <span id="extraCountBadge" style="margin-left: auto; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(99,102,241,0.15); color: var(--accent-purple);">0</span>
+            </div>
+            <div id="extraSkillsList" class="badge-container"></div>
+          </div>
+
+          <!-- Skills Coverage by Category -->
+          <div class="card">
+            <div class="card-title">Category Coverage Diagnostics</div>
+            <div id="categoryBreakdownContainer"></div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Candidate Profile & Resume -->
+        <div id="tabResume" class="tab-pane">
+          <!-- Contact Info Cards -->
+          <div class="grid-4">
+            <div class="profile-card">
+              <div class="p-label">Candidate Name</div>
+              <div id="profCandidateName" class="p-val">Alex Chen</div>
+            </div>
+            <div class="profile-card">
+              <div class="p-label">Email Address</div>
+              <div id="profEmail" class="p-val">alex.chen@example.com</div>
+            </div>
+            <div class="profile-card">
+              <div class="p-label">Phone Number</div>
+              <div id="profPhone" class="p-val">(555) 234-5678</div>
+            </div>
+            <div class="profile-card">
+              <div class="p-label">Profiles / URLs</div>
+              <div id="profUrls" class="p-val">linkedin.com, github.com</div>
+            </div>
+          </div>
+
+          <!-- Education and Experience Cards -->
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">Extracted Academic Degrees</div>
+              <div id="profEducationList"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Experience & Tenure</div>
+              <div style="padding: 10px 0;">
+                <div style="font-size: 28px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;" id="profExpSummary">
+                  5 Years Estimated
+                </div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                  Parsed from chronological records and tenure declarations in candidate CV.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Keywords TF-IDF -->
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">Top Resume Keywords (TF-IDF Weight)</div>
+              <div id="resumeTopKeywordsList"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Top Job Description Keywords</div>
+              <div id="jdTopKeywordsList"></div>
+            </div>
+          </div>
+
+          <!-- Raw Extracted Text Viewer -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div class="card-title" style="margin-bottom: 0;">Extracted Resume Text</div>
+              <button id="copyRawTextBtn" class="sub-btn">Copy Text</button>
+            </div>
+            <div id="rawExtractedTextView" class="raw-text-box"></div>
+          </div>
+        </div>
+
+        <!-- Tab 4: ML Model Insights -->
+        <div id="tabModel" class="tab-pane">
+          <div class="grid-2">
+            <!-- Classification Result Summary -->
+            <div class="card">
+              <div class="card-title">Model Classification & Parameters</div>
+              <div style="background: rgba(10,14,26,0.6); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="color: var(--text-muted); font-size: 13px;">Selected Model:</span>
+                  <span style="color: #fff; font-weight: 700; font-size: 13px;">Tuned Random Forest</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="color: var(--text-muted); font-size: 13px;">Estimators:</span>
+                  <span style="color: #fff; font-weight: 600; font-size: 13px;">50 Trees</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="color: var(--text-muted); font-size: 13px;">Max Depth:</span>
+                  <span style="color: #fff; font-weight: 600; font-size: 13px;">10</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="color: var(--text-muted); font-size: 13px;">Validation Scheme:</span>
+                  <span style="color: #fff; font-weight: 600; font-size: 13px;">5-Fold Stratified Cross-Validation</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-muted); font-size: 13px;">Mean CV F1-Score:</span>
+                  <span style="color: #34d399; font-weight: 700; font-size: 13px;">92.74% (+/- 2.68%)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature Importance -->
+            <div class="card">
+              <div class="card-title">Random Forest Feature Importance</div>
+              <div class="feature-row-item">
+                <div class="feature-meta">
+                  <span class="feature-title">TF-IDF Cosine Similarity</span>
+                  <span class="feature-score">41.4%</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width: 41.4%; background: var(--accent-indigo);"></div></div>
+              </div>
+
+              <div class="feature-row-item">
+                <div class="feature-meta">
+                  <span class="feature-title">Skill Match Percentage</span>
+                  <span class="feature-score">33.9%</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width: 33.9%; background: #10b981;"></div></div>
+              </div>
+
+              <div class="feature-row-item">
+                <div class="feature-meta">
+                  <span class="feature-title">Experience Duration (Years)</span>
+                  <span class="feature-score">12.5%</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width: 12.5%; background: var(--accent-cyan);"></div></div>
+              </div>
+
+              <div class="feature-row-item">
+                <div class="feature-meta">
+                  <span class="feature-title">Education Degree Hierarchy</span>
+                  <span class="feature-score">7.2%</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width: 7.2%; background: var(--accent-purple);"></div></div>
+              </div>
+
+              <div class="feature-row-item">
+                <div class="feature-meta">
+                  <span class="feature-title">Total Skill Volume</span>
+                  <span class="feature-score">5.0%</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width: 5.0%; background: #a855f7;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Model Evaluation Metrics Comparison Table -->
+          <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title">Empirical Model Benchmarking (Test Dataset = 100)</div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 11px; text-transform: uppercase;">
+                  <th style="padding: 12px 10px;">Model</th>
+                  <th style="padding: 12px 10px;">Accuracy</th>
+                  <th style="padding: 12px 10px;">Precision (Weighted)</th>
+                  <th style="padding: 12px 10px;">Recall (Weighted)</th>
+                  <th style="padding: 12px 10px;">F1-Score (Weighted)</th>
+                  <th style="padding: 12px 10px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 12px 10px; font-weight: 700; color: #fff;">Random Forest Classifier</td>
+                  <td style="padding: 12px 10px; color: #34d399; font-weight: 700;">91.00%</td>
+                  <td style="padding: 12px 10px;">91.15%</td>
+                  <td style="padding: 12px 10px;">91.00%</td>
+                  <td style="padding: 12px 10px; color: var(--accent-purple); font-weight: 700;">90.98%</td>
+                  <td style="padding: 12px 10px;"><span style="color:#34d399; background:rgba(16,185,129,0.1); padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">Active Production</span></td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 10px; font-weight: 700; color: #fff;">Logistic Regression Baseline</td>
+                  <td style="padding: 12px 10px; color: #34d399; font-weight: 700;">95.00%</td>
+                  <td style="padding: 12px 10px;">95.15%</td>
+                  <td style="padding: 12px 10px;">95.00%</td>
+                  <td style="padding: 12px 10px; color: var(--accent-purple); font-weight: 700;">94.95%</td>
+                  <td style="padding: 12px 10px;"><span style="color:var(--text-muted); background:rgba(255,255,255,0.05); padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">Benchmark</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Confusion Matrix Card -->
+          <div class="card">
+            <div class="card-title">Random Forest Confusion Matrix (Test Split)</div>
+            <div style="max-width: 520px; margin: 0 auto;">
+              <div class="matrix-grid">
+                <div class="matrix-cell matrix-header">Actual \ Pred</div>
+                <div class="matrix-cell matrix-header">Moderate</div>
+                <div class="matrix-cell matrix-header">Strong</div>
+                <div class="matrix-cell matrix-header">Weak</div>
+
+                <div class="matrix-cell matrix-header">Moderate (34)</div>
+                <div class="matrix-cell highlight">29</div>
+                <div class="matrix-cell">1</div>
+                <div class="matrix-cell">4</div>
+
+                <div class="matrix-cell matrix-header">Strong (33)</div>
+                <div class="matrix-cell">3</div>
+                <div class="matrix-cell highlight">30</div>
+                <div class="matrix-cell">0</div>
+
+                <div class="matrix-cell matrix-header">Weak (33)</div>
+                <div class="matrix-cell">1</div>
+                <div class="matrix-cell">0</div>
+                <div class="matrix-cell highlight">32</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

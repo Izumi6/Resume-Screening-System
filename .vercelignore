@@ -1,0 +1,10 @@
+# Ignore Python backend files from Vercel deployment bundle
+app.py
+requirements.txt
+models/
+notebooks/
+tests/
+report/
+src/
+.streamlit/
+data/training_data/
