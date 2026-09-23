@@ -1,5 +1,12 @@
 # Resume Screening System
 
+**Author:** Suyash Vakhariya  
+**Roll No:** AIML A6 AUG 11681  
+**Specialization:** Artificial Intelligence and Machine Learning  
+**Repository:** https://github.com/Izumi6/Resume-Screening-System  
+
+---
+
 An NLP and Machine Learning system for automated resume screening, candidate ranking, and job description matching. Built with Python, NLTK, Scikit-learn, and Streamlit.
 
 ## Abstract
