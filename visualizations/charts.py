@@ -71,7 +71,7 @@ def create_match_gauge(score, label="Overall Match Score"):
         value=score,
         number={
             "suffix": "%",
-            "font": {"size": 56, "color": COLORS["text"], "family": FONT_FAMILY},
+            "font": {"size": 42, "color": COLORS["text"], "family": FONT_FAMILY},
         },
         title={
             "text": label,
