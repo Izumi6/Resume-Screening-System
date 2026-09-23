@@ -4,6 +4,8 @@
 **Roll No:** AIML A6 AUG 11681  
 **Specialization:** Artificial Intelligence and Machine Learning  
 **Repository:** https://github.com/Izumi6/Resume-Screening-System  
+**Live Demo:** https://beautiful-citations-installing-mrna.trycloudflare.com  
+**1-Click Cloud Deploy:** https://share.streamlit.io/deploy?repository=Izumi6/Resume-Screening-System&branch=main&mainModule=app.py  
 
 ---
 
