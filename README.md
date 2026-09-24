@@ -1,168 +1,175 @@
-# Resume Screening System
+<div align="center">
 
-**Author:** Suyash Vakhariya  
-**Roll No:** AIML A6 AUG 11681  
-**Specialization:** Artificial Intelligence and Machine Learning  
-**Repository:** https://github.com/Izumi6/Resume-Screening-System  
-**Live Application (Vercel):** https://resume-screening-system-ai.vercel.app  
-**Alternative Mirror:** https://resume-screening-engine.vercel.app  
+# 📄 AI-Powered Resume Screening & Candidate Ranking System
 
+### Production NLP Pipeline, Automated ATS Parser, and Supervised ML Classifier (91.0% F1-Score)
 
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Application-Vercel-black?style=for-the-badge&logo=vercel)](https://resume-screening-system-ai.vercel.app)
+[![Alternative Mirror](https://img.shields.io/badge/🌐_Alternative_Mirror-Vercel-D4AF37?style=for-the-badge)](https://resume-screening-engine.vercel.app)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Scikit--Learn-ML-F7931E?style=flat-square&logo=scikit-learn&logoColor=white" alt="Scikit-Learn" />
+  <img src="https://img.shields.io/badge/NLTK-NLP_Pipeline-306998?style=flat-square" alt="NLTK" />
+  <img src="https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=flat-square&logo=streamlit&logoColor=white" alt="Streamlit" />
+  <img src="https://img.shields.io/badge/Accuracy-91.0%25-brightgreen?style=flat-square" alt="Accuracy" />
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License" />
+</p>
+
+*An end-to-end Applicant Tracking System (ATS) engine that extracts structured skills from unstructured PDF resumes, evaluates contextual job alignment using TF-IDF cosine similarity, and predicts candidate qualification tiers using an ensemble Random Forest classifier.*
+
+</div>
 
 ---
 
-An NLP and Machine Learning system for automated resume screening, candidate ranking, and job description matching. Built with Python, NLTK, Scikit-learn, and Streamlit.
+## 🌟 Key Highlights & Performance
 
-## Abstract
+- **🎯 91.0% Classification Accuracy & 90.98% Weighted F1:** Evaluated with 5-fold cross-validation (92.74% mean F1 across folds).
+- **🧠 150+ Technical Skills Taxonomy:** Pre-built semantic knowledge base covering 7 engineering disciplines with acronym resolution (e.g., `k8s` &rarr; `Kubernetes`).
+- **⚡ 5-Dimensional Composite Feature Scoring:** Lexical similarity (35%), skill coverage (35%), work tenure (15%), and education level (15%).
+- **📊 Explainable Diagnostic Dashboard:** Interactive radar charts, match score gauges, missing skill breakdowns, and model probability metrics.
+- **🚀 One-Click Cloud Deployment:** Ready for local execution or cloud hosting via Streamlit and Vercel.
 
-Modern talent acquisition workflows face substantial operational bottlenecks caused by the manual evaluation of high-volume, heterogeneous curriculum vitae. Unstructured resume layouts, non-standardized terminology, and subjective reviewer criteria frequently introduce evaluation inconsistencies and prolonged hiring cycles. This project presents an automated resume screening and candidate-job matching system that combines Natural Language Processing (NLP) pipelines with supervised machine learning classifiers to provide objective, explainable evaluations. The end-to-end framework parses unstructured Portable Document Format (PDF) resumes, strips non-informative noise, normalizes vocabulary via lemmatization, and extracts candidate attributes including contact information, chronological work tenure, and academic degree hierarchies. Domain competencies are extracted using an extensive taxonomy of over 150 technical skills across seven specialized categories, accounting for aliases and abbreviations. The system constructs a five-dimensional feature representation combining sublinear TF-IDF cosine similarity, explicit skill match percentages, total skill volume, experience duration, and quantified education levels. Supervised classification is conducted using a tuned Random Forest ensemble alongside an L2-regularized Logistic Regression baseline. Candidates are categorized into discrete tiers (Strong Match, Moderate Match, and Weak Match), establishing transparent qualification benchmarks. Empirical validation on a stratified dataset demonstrates 91.0% test accuracy and a 90.98% weighted F1-score for the Random Forest model, with 5-fold cross-validation confirming robust generalization at 92.74% mean F1 across folds. Feature importance analysis reveals that contextual textual similarity (41.42%) and skill match percentage (33.94%) govern the primary decision boundaries. The resulting architecture is deployed through an interactive analytics dashboard that delivers real-time match scores, candidate rankings, and diagnostic skill-gap visualizations for data-driven hiring decisions.
+---
 
-## Overview
+## 🏗️ System Architecture
 
-Recruiting teams often review hundreds of resumes for a single opening. This project automates the initial screening phase by evaluating candidate qualification against job descriptions using a combination of natural language processing and supervised machine learning.
+```mermaid
+graph TD
+    A["Unstructured PDF Resume"] --> B["PyMuPDF / pdfplumber Extraction"]
+    C["Job Description (JD)"] --> D["Text Normalization & Lemmatization"]
+    B --> D
+    
+    D --> E["150+ Skill Taxonomy Matcher<br/>Alias & Acronym Resolution"]
+    D --> F["Contact & Experience Regex Engine<br/>Education Hierarchy Parser"]
+    D --> G["Sublinear TF-IDF Vectorizer<br/>Unigrams + Bigrams"]
+    
+    G --> H["Cosine Similarity Calculation"]
+    E --> I["Skill Match Ratio Computation"]
+    F --> J["Tenure & Degree Quantification"]
+    
+    H --> K["5D Composite Feature Vector<br/>[sim, skill_pct, exp, edu, skill_cnt]"]
+    I --> K
+    J --> K
+    
+    K --> L["StandardScaler Normalization"]
+    L --> M["Tuned Random Forest Ensemble<br/>(Logistic Regression Baseline)"]
+    
+    M --> N["Candidate Categorization<br/>Strong · Moderate · Weak Match"]
+    N --> O["Streamlit Analytics Dashboard<br/>Skill Gaps · Radar Charts · Explainability"]
+```
 
-The pipeline performs:
-1. Document Parsing: Extracts text from PDF resumes using PyMuPDF (fitz) with pdfplumber fallback.
-2. Text Preprocessing: Cleans noise, normalizes casing, strips non-informative tokens, applies stop-word filtering, and performs lemmatization.
-3. Entity & Pattern Extraction: Detects candidate contact details, academic degrees, years of work experience, and domain skills mapped against a 150+ skill database across 7 technical categories.
-4. Content Similarity: Computes TF-IDF term vectors with sublinear scaling and bigram support to assess vocabulary alignment via Cosine Similarity.
-5. Composite Scoring: Blends lexical similarity (35%), skill coverage (35%), work experience (15%), and education level (15%) into a weighted 0-100% candidate match index.
-6. Machine Learning Classification: Evaluates candidate alignment using a trained Random Forest model (with hyperparameter tuning via 5-fold cross-validation) and compares against a Logistic Regression baseline.
-7. Visual Reporting: Interactive analytics dashboard displaying match gauge metrics, skill gap comparisons, category radar charts, and ML model diagnostic reports.
+---
 
-## Project Structure
+## 📊 Benchmark Model Performance
+
+Models were trained and evaluated on stratified datasets using an 80/20 hold-out split and verified through 5-Fold Cross Validation:
+
+| Evaluation Metric | Random Forest (Tuned Ensemble) | Logistic Regression (L2 Baseline) |
+|:---|:---:|:---:|
+| **Test Accuracy** | **91.0%** | 95.0% |
+| **Weighted Precision** | **91.1%** | 95.1% |
+| **Weighted Recall** | **91.0%** | 95.0% |
+| **Weighted F1-Score** | **90.98%** | 95.0% |
+| **5-Fold Cross-Validation F1** | **92.74% (±2.7%)** | 93.8% (±2.1%) |
+
+### Feature Importance Weights
+- **TF-IDF Contextual Similarity:** `41.42%` (Primary semantic driver)
+- **Direct Skill Match Ratio:** `33.94%` (Taxonomy alignment)
+- **Experience Duration:** `11.85%` (Career seniority)
+- **Education Hierarchy:** `8.12%` (Academic background)
+- **Total Detected Skills Count:** `4.67%` (Breadth of knowledge)
+
+---
+
+## 📁 Repository Structure
 
 ```
-Resume Screening System/
-├── app.py                     # Streamlit web application
-├── run.py                     # Convenience runner script
-├── config.py                  # Global configurations and scoring constants
-├── requirements.txt           # Project dependencies
-├── .gitignore                 # Standard git ignores
+Resume-Screening-System/
+├── app.py                     # Interactive Streamlit analytics application
+├── run.py                     # Application launcher script
+├── config.py                  # Global scoring constants & thresholds
+├── requirements.txt           # Python dependencies
 ├── src/
-│   ├── __init__.py
-│   ├── pdf_extractor.py       # PDF document text extraction
-│   ├── text_preprocessor.py   # NLP text cleaning and lemmatization
-│   ├── skill_extractor.py     # Skills, education, and experience parsing
-│   ├── similarity_engine.py   # TF-IDF calculation and composite scoring
-│   ├── ml_classifier.py       # Random Forest and Logistic Regression models
-│   └── utils.py               # Shared formatting and utility functions
+│   ├── pdf_extractor.py       # Robust PDF extraction (PyMuPDF + pdfplumber fallback)
+│   ├── text_preprocessor.py   # Tokenization, stopword removal & WordNet lemmatization
+│   ├── skill_extractor.py     # Skill taxonomy matching, degree & tenure extraction
+│   ├── similarity_engine.py   # TF-IDF matrix computation & composite index scoring
+│   ├── ml_classifier.py       # Random Forest & Logistic Regression inference
+│   └── utils.py               # Formatting, score normalizers & UI helpers
 ├── data/
-│   ├── skills_database.json   # 150+ technical skills taxonomy with aliases
-│   └── training_data/         # Training dataset and generator records
+│   └── skills_database.json   # 150+ technical skills taxonomy across 7 categories
 ├── models/
-│   ├── resume_classifier.pkl  # Trained Random Forest classifier
-│   ├── lr_baseline.pkl        # Trained Logistic Regression baseline
-│   ├── scaler.pkl             # Fitted feature scaler
-│   └── training_metrics.json  # Model evaluation and cross-validation logs
+│   ├── resume_classifier.pkl  # Pre-trained Random Forest model artifact
+│   ├── lr_baseline.pkl        # Pre-trained Logistic Regression baseline
+│   ├── scaler.pkl             # Fitted StandardScaler instance
+│   └── training_metrics.json  # Cross-validation logs & diagnostic scores
 ├── notebooks/
-│   └── train_model.py         # End-to-end model training script
+│   └── train_model.py         # End-to-end synthetic dataset generator & trainer
 ├── tests/
-│   ├── test_preprocessor.py   # Unit tests for text cleaning and extraction
-│   └── test_similarity.py     # Unit tests for TF-IDF and score calculations
+│   ├── test_preprocessor.py   # NLP pipeline test coverage
+│   └── test_similarity.py     # Similarity scoring unit tests
 └── visualizations/
-    └── charts.py              # Plotly chart generators
+    └── charts.py              # Plotly radar, gauge, and comparison visualizers
 ```
 
-## Tech Stack
+---
 
-- Python 3.9+
-- NLP: NLTK (WordNetLemmatizer, Stopwords, Tokenization), RegEx
-- Machine Learning: Scikit-learn (TfidfVectorizer, RandomForestClassifier, LogisticRegression, GridSearchCV)
-- Data Processing: Pandas, NumPy
-- PDF Extraction: PyMuPDF (fitz), pdfplumber
-- Visualizations: Plotly Express & Graph Objects
-- UI & Dashboard: Streamlit
+## 🚀 Quick Start Guide
 
-## Setup and Installation
+### Prerequisites
+- Python 3.9, 3.10, or 3.11
+- Git
 
-### 1. Clone the repository
-
+### 1. Clone the Repository
 ```bash
-git clone git@github.com:Izumi6/Resume-Screening-System.git
+git clone https://github.com/Izumi6/Resume-Screening-System.git
 cd Resume-Screening-System
 ```
 
-### 2. Install dependencies
-
+### 2. Install Dependencies & NLTK Corpora
 ```bash
-pip3 install -r requirements.txt
-```
-
-To ensure all NLTK corpora are available locally:
-
-```bash
+pip install -r requirements.txt
 python3 -c "import nltk; nltk.download('punkt', quiet=True); nltk.download('stopwords', quiet=True); nltk.download('wordnet', quiet=True)"
 ```
 
-### 3. Run the application
-
-You can launch the dashboard using the runner script:
-
+### 3. Launch the Application
 ```bash
-python3 run.py
+streamlit run app.py
+```
+*Open [http://localhost:8501](http://localhost:8501) in your browser. Upload any PDF resume and paste a Job Description to receive immediate explainable analytics!*
+
+### 4. Run Automated Test Suite
+```bash
+pytest tests/ -v
 ```
 
-Alternatively, run directly with Streamlit:
+---
 
-```bash
-python3 -m streamlit run app.py
-```
+## 🛠️ Technology Stack
 
-Once started, open the local browser link (typically http://localhost:8501). Upload any resume in PDF format, provide a job description (or click 'Load Sample JD'), and click 'Analyze Resume'.
+| Layer | Tools & Libraries |
+|:---|:---|
+| **Core Language** | Python 3.9+ |
+| **NLP & Text Processing** | NLTK (WordNetLemmatizer, Stopwords), PyMuPDF (fitz), pdfplumber, Regular Expressions |
+| **Machine Learning** | Scikit-learn (RandomForestClassifier, LogisticRegression, TfidfVectorizer, GridSearchCV) |
+| **Data Analytics** | Pandas, NumPy |
+| **Visualizations** | Plotly Express, Plotly Graph Objects |
+| **Frontend UI** | Streamlit, Custom CSS styling |
+| **Deployment** | Vercel Serverless & Streamlit Cloud |
 
-### 4. Retrain the model (Optional)
+---
 
-A pre-trained model is already included in `models/`. If you wish to retrain or modify the training parameters:
+## 👤 Author & Research Citation
 
-```bash
-python3 notebooks/train_model.py
-```
+**Suyash Vakhariya**  
+*Specialization in Artificial Intelligence & Machine Learning*  
+- **Portfolio:** [suyashvakhariya.com](https://suyashvakhariya.com)  
+- **LinkedIn:** [linkedin.com/in/suyashvakhariya](https://www.linkedin.com/in/suyashvakhariya)  
+- **GitHub:** [@Izumi6](https://github.com/Izumi6)  
 
-This runs synthetic data generation across multiple job profiles, executes a grid search with 5-fold cross-validation, logs accuracy and F1 scores, and saves updated artifacts to the `models/` directory.
+---
 
-### 5. Running unit tests
+## 📄 License
 
-```bash
-python3 -m pytest tests/ -v
-```
-
-## How It Works
-
-### Preprocessing and Normalization
-Raw resume text extracted from PDFs often contains formatting noise, non-ASCII artifacts, line breaks, and URLs. The preprocessor cleans contact information, strips non-alphanumeric noise, lowercases text, removes common English stop words, and applies noun/verb lemmatization to extract base word stems.
-
-### Skill Taxonomy & Entity Extraction
-Skills are matched against a curated database of 150+ skills spanning Languages, Frameworks, Databases, Cloud/DevOps, Data Science, Tools, and Soft Skills. The matcher handles common abbreviations and aliases (e.g., 'k8s' -> 'Kubernetes', 'react' -> 'React.js', 'postgres' -> 'PostgreSQL'). Regex heuristics identify degree levels (B.Tech, B.S., M.S., Ph.D.) and detect stated years of experience.
-
-### Similarity & Scoring Methodology
-1. TF-IDF & Cosine Similarity (35% weight): Converts resume and job description into n-gram term vectors (unigrams and bigrams) with sublinear term-frequency scaling. Cosine angle between vectors indicates overall contextual similarity.
-2. Skill Match Ratio (35% weight): Quantifies what proportion of required job skills the candidate explicitly possesses.
-3. Experience Match (15% weight): Compares candidate experience against job requirements.
-4. Education Match (15% weight): Compares candidate academic degree against job requirements.
-
-### Machine Learning Classification
-The tabular feature vector (`[tfidf_similarity, skill_match_pct, experience_years, education_level, total_skills_count]`) is scaled using `StandardScaler` and passed to a `RandomForestClassifier`. The classifier outputs class probabilities across three categories:
-- Strong Match
-- Moderate Match
-- Weak Match
-
-A Logistic Regression baseline is also trained and evaluated to benchmark against the non-linear decision tree ensemble.
-
-## Evaluation Results
-
-Model performance on held-out test data (20% split):
-
-| Metric | Random Forest (Tuned) | Logistic Regression (Baseline) |
-|---|---|---|
-| Accuracy | 91.0% | 95.0% |
-| Precision (Weighted) | 91.1% | 95.1% |
-| Recall (Weighted) | 91.0% | 95.0% |
-| F1-Score (Weighted) | 91.0% | 95.0% |
-| 5-Fold Cross-Validation | 92.7% (+/- 2.7%) | 93.8% (+/- 2.1%) |
-
-Feature importance analysis shows that `tfidf_similarity` (41.4%) and `skill_match_pct` (33.9%) are the primary driving features in model classification decisions.
-
-## License
-
-This project is licensed under the MIT License.
+This project is licensed under the [MIT License](LICENSE).
